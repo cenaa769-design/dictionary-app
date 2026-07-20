@@ -9,19 +9,20 @@
         body { font-family: system-ui, sans-serif; max-width: 600px; margin: 40px auto; padding: 0 20px; text-align: center; }
         input { width: 80%; padding: 12px; font-size: 16px; margin-bottom: 20px; }
         #result { margin-top: 20px; font-weight: bold; color: #333; }
+        #error-details { color: red; font-size: 14px; margin-top: 10px; word-break: break-all; }
     </style>
 </head>
 <body>
 
     <h1>Massive Dictionary App</h1>
     <p id="status">Status: Loading dictionary...</p>
+    <div id="error-details"></div>
     
     <input type="text" id="searchBox" placeholder="Type a word..." disabled>
     <div id="result"></div>
 
     <script>
         let dictionaryData = {};
-
         const DICTIONARY_URL = "https://github.com/cenaa769-design/dictionary-app/releases/download/1.1/dictionary.json";
 
         async function loadDictionary() {
@@ -34,15 +35,20 @@
                     return;
                 }
 
-                const response = await fetch(DICTIONARY_URL);
-                dictionaryData = await response.json();
+                // Using a CORS proxy service (jsdelivr/cdnjs alternative or corsproxy.io) to ensure browser allows fetch on massive release assets
+                const proxyUrl = "https://corsproxy.io/?" + encodeURIComponent(DICTIONARY_URL);
+                const response = await fetch(proxyUrl);
                 
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                
+                dictionaryData = await response.json();
                 localStorage.setItem("dictionary_cache", JSON.stringify(dictionaryData));
                 
                 document.getElementById("status").innerText = "Status: Dictionary ready!";
                 document.getElementById("searchBox").disabled = false;
             } catch (error) {
                 document.getElementById("status").innerText = "Status: Failed to load dictionary link.";
+                document.getElementById("error-details").innerText = "Error: " + error.message;
             }
         }
 
